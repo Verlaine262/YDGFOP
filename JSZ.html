@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>正在建设中 - YDGF开放平台</title>
+    <style>
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Helvetica Neue', Arial, 'PingFang SC', sans-serif;
+        }
+
+        /* 动态星空背景 */
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 星轨动画 */
+        .star {
+            position: absolute;
+            background: rgba(255,255,255,0.8);
+            border-radius: 50%;
+            animation: orbit linear infinite;
+        }
+
+        @keyframes orbit {
+            from { transform: rotate(0deg) translateX(150px) rotate(0deg); }
+            to { transform: rotate(360deg) translateX(150px) rotate(-360deg); }
+        }
+
+        /* 主内容容器 */
+        .construction-container {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            padding: 3rem;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(66, 153, 225, 0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* 标题样式 */
+        h1 {
+            color: #fff;
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            text-shadow: 0 0 15px rgba(66, 153, 225, 0.5);
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        /* 动态文字效果 */
+        .dynamic-text {
+            color: #89CFF0;
+            font-size: 1.2rem;
+            margin: 2rem 0;
+            position: relative;
+            display: inline-block;
+        }
+
+        .dynamic-text::after {
+            content: '';
+            position: absolute;
+            right: -10px;
+            width: 2px;
+            height: 100%;
+            background: #89CFF0;
+            animation: blink 0.8s infinite;
+        }
+
+        /* 进度指示器 */
+        .progress-container {
+            width: 300px;
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            margin: 2rem auto;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            width: 65%;
+            height: 100%;
+            background: linear-gradient(90deg, #89CFF0 0%, #4299e1 100%);
+            border-radius: 4px;
+            animation: progress 2s ease-in-out infinite;
+        }
+
+        /* 联系按钮 */
+        .contact-btn {
+            background: transparent;
+            border: 2px solid #4299e1;
+            color: #89CFF0;
+            padding: 12px 36px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            margin-top: 2rem;
+        }
+
+        .contact-btn:hover {
+            background: rgba(66, 153, 225, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(66, 153, 225, 0.3);
+        }
+
+        /* 动画定义 */
+        @keyframes blink {
+            0%, 100% { opacity: 0 }
+            50% { opacity: 1 }
+        }
+
+        @keyframes progress {
+            0%, 100% { width: 65% }
+            50% { width: 68% }
+        }
+    </style>
+</head>
+<body>
+    <!-- 动态星空 -->
+    <div class="star" style="top:20%; left:30%"></div>
+    <div class="star" style="top:70%; left:60%"></div>
+    <div class="star" style="top:40%; left:80%"></div>
+
+    <!-- 主内容 -->
+    <div class="construction-container">
+        <h1>正在建设中</h1>
+        <div class="dynamic-text">我们正在全力打造卓越体验</div>
+        
+        <div class="progress-container">
+            <div class="progress-bar"></div>
+        </div>
+
+        <p style="color: #a8dadc; margin: 1rem 0">预计上线时间：2026年2月30日</p>
+        
+        <button class="contact-btn" onclick="showContactForm()">
+            <span>📧 获取更新通知</span>
+        </button>
+    </div>
+
+    <script>
+        // 星空生成器
+        function createStars() {
+            const container = document.body;
+            for(let i = 0; i < 50; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.cssText = `
+                    top: ${Math.random() * 100}%;
+                    left: ${Math.random() * 100}%;
+                    width: ${Math.random() * 3}px;
+                    height: ${Math.random() * 3}px;
+                    animation-duration: ${5000 + Math.random() * 10000}ms;
+                `;
+                container.appendChild(star);
+            }
+        }
+
+        // 动态文字内容
+        const dynamicTexts = [
+            "代码正在激情燃烧...",
+            "设计师正在挥洒创意...",
+            "服务器正在高速运转...",
+            "测试人员正在严格把关..."
+        ];
+        let currentIndex = 0;
+        
+        function updateText() {
+            document.querySelector('.dynamic-text').innerHTML = 
+                dynamicTexts[currentIndex] + '<div class="cursor"></div>';
+            currentIndex = (currentIndex + 1) % dynamicTexts.length;
+        }
+
+        // 初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            createStars();
+            setInterval(updateText, 3000);
+        });
+
+        // 联系表单交互
+        function showContactForm() {
+            const btn = document.querySelector('.contact-btn');
+            btn.innerHTML = '📩 已订阅！';
+            btn.style.background = '#4299e1';
+            btn.style.borderColor = 'transparent';
+            setTimeout(() => {
+                btn.innerHTML = '📧 获取更新通知';
+                btn.style.background = 'transparent';
+                btn.style.borderColor = '#4299e1';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
