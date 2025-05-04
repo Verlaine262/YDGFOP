@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网站后台管理系统</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        /* 全局样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+
+        /* 顶部导航栏 */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: #2c3e50;
+            color: white;
+            display: flex;
+            align-items: center;
+            padding: 0 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        .nav-title {
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        /* 修改后的侧边栏样式 */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 60px;
+            bottom: 0;
+            width: 240px;
+            background: #f5f5f5;
+            overflow-y: auto;
+            border-right: 1px solid rgba(0,0,0,0.12);
+        }
+        .sidebar-section {
+            padding: 16px 0;
+        }
+        .section-title {
+            color: rgba(0,0,0,0.6);
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            padding: 24px 24px 8px;
+        }
+        .menu-list {
+            list-style: none;
+        }
+        .menu-item {
+            position: relative; /* 定位上下文 */
+            padding: 12px 24px;
+            margin: 4px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            color: rgba(0,0,0,0.6);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            border-radius: 50px;
+            overflow: hidden; /* 隐藏溢出的涟漪效果 */
+        }
+        .menu-item:hover {
+            background: rgba(0,0,0,0.05);
+            border-radius: 50px;
+        }
+        .menu-item.active {
+            background: rgba(33, 150, 243, 0.1);
+            color: #2196f3;
+            font-weight: 500;
+            border-radius: 50px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .menu-item i {
+            font-size: 18px;
+            margin-right: 16px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .menu-item:active::after {
+            width: 200px;
+            height: 200px;
+            opacity: 0;
+        }
+        /* 点击动画类 */
+        .menu-item.clicking {
+            transform: scale(0.98);
+            transition: transform 0.1s;
+        }
+        /* 修正后的涟漪动画 */
+        .menu-item::after {
+            content: "";
+            position: absolute;
+            left: var(--x);
+            top: var(--y);
+            width: 0;
+            height: 0;
+            background: rgba(33, 150, 243, 0.15);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: 
+                width 0.4s ease-out,
+                height 0.4s ease-out,
+                opacity 0.8s ease-out;
+            opacity: 1;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+    /* 永久展开状态 */
+        .menu-item.ripple::after {
+            width: 200px;
+            height: 200px;
+            opacity: 0;
+            transition: 
+                width 0.4s ease-out,
+                height 0.4s ease-out,
+                opacity 0.8s linear;
+        }
+        /* 主内容区调整 */
+        .main-content {
+            margin: 80px 0 0 240px;
+            padding: 40px;
+            min-height: calc(100vh - 60px);
+            background: #f5f6fa;
+        }
+
+        @media (max-width: 960px) {
+            .sidebar {
+                width: 280px;
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+        }
+
+        /* 内容区样式 */
+        .content-page {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .content-page.active {
+            display: block;
+            opacity: 1;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-right: 25px;
+            border: 3px solid #ecf0f1;
+        }
+        #uptime {
+            background: white;
+            padding: 18px;
+            border-radius: 8px;
+            margin: 30px 0;
+            font-size: 16px;
+            color: #7f8c8d;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            text-align: center;
+            transition: 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+        }
+        .stat-icon {
+            font-size: 32px;
+            margin-bottom: 15px;
+            opacity: 0.8;
+        }
+        .stat-value {
+            font-size: 28px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 10px 0;
+        }
+        .alert-box {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 20px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin: 20px 0;
+        }
+        .data-table th,
+        .data-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        .data-table th {
+            background: #3498db;
+            color: white;
+        }
+        .action-btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .primary-btn {
+            background: #3498db;
+            color: white;
+        }
+        .danger-btn {
+            background: #e74c3c;
+            color: white;
+        }
+        .monitor-card {
+            height: 300px;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .danger-zone {
+            border: 2px solid #e74c3c;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            background: #fff5f5;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <nav class="top-nav">
+        <div class="nav-title">广附开放平台网页后台 Test</div>
+    </nav>
+
+    <!-- 修改后的侧边栏菜单 -->
+    <nav class="sidebar">
+        <div class="sidebar-section">
+            <div class="section-title">导航菜单(Test)</div>
+            <ul class="menu-list">
+                <li class="menu-item active" data-target="home">
+                    <i class="material-icons">home</i>
+                    首页
+                </li>
+            </ul>
+        </div>
+
+        <div class="sidebar-section">
+            <div class="section-title">常规功能</div>
+            <ul class="menu-list">
+                <li class="menu-item" data-target="announcement">
+                    <i class="material-icons">announcement</i>
+                    公告管理(Test)
+                </li>
+                <li class="menu-item" data-target="file">
+                    <i class="material-icons">folder</i>
+                    文件管理(Test)
+                </li>
+                <li class="menu-item" data-target="report">
+                    <i class="material-icons">warning</i>
+                    举报管理
+                </li>
+                <li class="menu-item" data-target="user">
+                    <i class="material-icons">people</i>
+                    用户管理(Test)
+                </li>
+                <li class="menu-item" data-target="analytics">
+                    <i class="material-icons">analytics</i>
+                    用户分析
+                </li>
+                <li class="menu-item" data-target="blacklist">
+                    <i class="material-icons">block</i>
+                    黑名单用户
+                </li>
+                <li class="menu-item" data-target="account">
+                    <i class="material-icons">lock</i>
+                    账户管理
+                </li>
+            </ul>
+        </div>
+
+        <div class="sidebar-section">
+            <div class="section-title">实验功能</div>
+            <ul class="menu-list">
+                <li class="menu-item" data-target="security">
+                    <i class="material-icons">security</i>
+                    安全中心(Test)
+                </li>
+                <li class="menu-item" data-target="traffic">
+                    <i class="material-icons">timeline</i>
+                    网站流量监测
+                </li>
+                <li class="menu-item" data-target="performance">
+                    <i class="material-icons">speed</i>
+                    网站性能监视
+                </li>
+                <li class="menu-item" data-target="emergency">
+                    <i class="material-icons">emergency</i>
+                    一键跑路(Test)
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+        <!-- 首页 -->
+        <div class="content-page active" id="home">
+            <div class="header">
+                <img src="https://via.placeholder.com/150" alt="头像" class="avatar">
+                <h1>晚上好，Crabapple</h1>
+            </div>
+
+            <div id="uptime">
+                🕒 本站已运行 
+                <span id="days">0</span> 天 
+                <span id="hours">00</span> 小时 
+                <span id="minutes">00</span> 分钟 
+                <span id="seconds">00</span> 秒
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">👤</div>
+                    <div class="stat-value">1,234</div>
+                    <small>注册用户数</small>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💾</div>
+                    <div class="stat-value">256.12 GB</div>
+                    <small>文件存储量</small>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📃</div>
+                    <div class="stat-value">42 条</div>
+                    <small>公告发布数</small>
+                </div>
+            </div>
+
+            <div class="alert-box">
+                <span class="alert-icon">⚠️</span>
+                <p>系统提示：注意网络安全</p>
+            </div>
+        </div>
+
+        <!-- 公告管理 -->
+        <div class="content-page" id="announcement">
+            <div class="header">
+                <h1>📢 公告管理_Test</h1>
+            </div>
+            <div class="form-group">
+                <input type="text" placeholder="公告标题" class="form-input">
+                <button class="action-btn primary-btn">发布公告</button>
+            </div>
+            <table class="data-table">
+                <tr><th>标题</th><th>发布时间</th><th>状态</th><th>操作</th></tr>
+                <tr><td>系统维护通知</td><td>2025-05-01</td><td>✅ 已发布</td>
+                    <td><button class="action-btn">编辑</button>
+                    <button class="action-btn danger-btn">删除</button></td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- 文件管理 -->
+        <div class="content-page" id="file">
+            <div class="header">
+                <h1>📁 文件管理_Test</h1>
+            </div>
+            <div class="form-group">
+                <input type="file" class="form-input">
+                <button class="action-btn primary-btn">上传文件</button>
+            </div>
+            <table class="data-table">
+                <tr><th>文件名</th><th>大小</th><th>上传时间</th><th>操作</th></tr>
+                <tr><td>backup.zip</td><td>1.2GB</td><td>2025-05-02</td>
+                    <td><button class="action-btn primary-btn">下载</button>
+                    <button class="action-btn danger-btn">删除</button></td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- 用户管理 -->
+        <div class="content-page" id="user">
+            <div class="header">
+                <h1>👥 用户管理_Test</h1>
+            </div>
+            <table class="data-table">
+                <tr><th>用户名</th><th>注册时间</th><th>权限</th><th>操作</th></tr>
+                <tr><td>Crabapple</td><td>2025-01-01</td><td>管理员</td>
+                    <td><button class="action-btn">编辑</button>
+                    <button class="action-btn danger-btn">封禁</button></td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- 安全中心 -->
+        <div class="content-page" id="security">
+            <div class="header">
+                <h1>🛡️ 安全中心_Test</h1>
+            </div>
+            <div class="monitor-card">
+                <h3>最近登录记录</h3>
+                <table class="data-table">
+                    <tr><th>时间</th><th>IP地址</th><th>设备</th></tr>
+                    <tr><td>2025-05-03 14:23</td><td>192.168.1.1</td><td>Windows</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- 一键跑路 -->
+        <div class="content-page" id="emergency">
+            <div class="danger-zone">
+                <h1 style="color: #e74c3c">🚨 一键跑路_Test</h1>
+                <p style="margin: 20px 0">此操作将清除所有数据并关闭系统</p>
+                <input type="password" placeholder="输入管理员密码" class="form-input">
+                <br>
+                <button class="action-btn danger-btn" style="margin-top: 20px; padding: 15px 30px">
+                    一键跑路_Test
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // 运行时间计算
+        const launchDate = new Date('2025-01-01');
+        
+        function updateUptime() {
+            const now = new Date();
+            const diff = now - launchDate;
+            
+            const days = Math.floor(diff / 86400000);
+            const hours = Math.floor((diff % 86400000) / 3600000);
+            const minutes = Math.floor((diff % 3600000) / 60000);
+            const seconds = Math.floor((diff % 60000) / 1000);
+            
+            document.getElementById('days').textContent = days;
+            document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+            document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+            document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+        }
+
+        // 菜单交互
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelector('.menu-item.active').classList.remove('active');
+                this.classList.add('active');
+            });
+        });
+
+        // 初始化
+        updateUptime();
+        setInterval(updateUptime, 1000);
+
+        // 导航栏滚动效果
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('.top-nav');
+            nav.style.boxShadow = window.scrollY > 10 
+                ? '0 4px 12px rgba(0,0,0,0.15)'
+                : '0 2px 10px rgba(0,0,0,0.1)';
+        });
+
+        // 页面切换功能
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', function() {
+                // 更新菜单激活状态
+                document.querySelector('.menu-item.active').classList.remove('active');
+                this.classList.add('active');
+                
+                // 切换内容页面
+                const targetId = this.dataset.target;
+                document.querySelectorAll('.content-page').forEach(page => {
+                    page.classList.remove('active');
+                });
+                document.getElementById(targetId).classList.add('active');
+            });
+        });
+
+        // 危险操作确认
+        document.querySelectorAll('.danger-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                if(!confirm('确定要执行此操作吗？')) {
+                    e.preventDefault();
+                }
+            });
+        });
+    // JavaScript交互逻辑
+        document.querySelectorAll('.menu-item').forEach(item => {
+    // 鼠标按下时触发涟漪
+    item.addEventListener('mousedown', function(e) {
+        const rect = this.getBoundingClientRect();
+        this.style.setProperty('--x', `${e.clientX - rect.left}px`);
+        this.style.setProperty('--y', `${e.clientY - rect.top}px`);
+        this.classList.add('ripple');
+    });
+
+    // 鼠标松开时保持状态
+    item.addEventListener('mouseup', function() {
+        setTimeout(() => {
+            this.classList.remove('ripple');
+        }, 400);
+    });
+
+    // 点击功能整合
+    item.addEventListener('click', function(e) {
+        // 移除旧激活状态
+        document.querySelectorAll('.menu-item.active').forEach(activeItem => {
+            activeItem.classList.remove('active');
+        });
+        
+        // 设置新激活状态
+        this.classList.add('active');
+        
+        // 切换内容页
+        const targetId = this.dataset.target;
+        document.querySelectorAll('.content-page').forEach(page => {
+            page.classList.remove('active');
+        });
+        document.getElementById(targetId).classList.add('active');
+    });
+});
+    </script>
+</body>
+</html>
