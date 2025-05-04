@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>后台登录_Test_1.0</title>
+    <style>
+        :root {
+            --primary-blue: #1a73e8;
+            --error-red: #d93025;
+            --gray-600: #5f6368;
+            --gray-300: #dadce0;
+            --brand-blue: #1E90FF;
+            --transition: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            background: #fff;
+        }
+
+        .auth-flow {
+            width: 100%;
+            max-width: 448px;
+            padding: 48px 40px 36px;
+            position: relative;
+        }
+
+        .brand-logo {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--brand-blue);
+            text-align: center;
+            margin: 0 auto 36px;
+            letter-spacing: 1.2px;
+            text-shadow: 1px 1px 2px rgba(30,144,255,0.1);
+            animation: logoEntry 0.5s var(--transition);
+        }
+
+        .step-container {
+            position: absolute;
+            width: 100%;
+            opacity: 0;
+            transform: translateX(20px);
+            transition: all 0.35s var(--transition);
+            pointer-events: none;
+        }
+
+        .step-container.active {
+            opacity: 1;
+            transform: none;
+            pointer-events: all;
+        }
+
+        .input-container {
+            position: relative;
+            margin: 24px 0;
+            height: 56px;
+        }
+
+        .input-field {
+            width: 100%;
+            height: 56px;
+            border: 1px solid var(--gray-300);
+            border-radius: 4px;
+            padding: 13px 15px;
+            font-size: 16px;
+            color: #202124;
+            background: transparent;
+            transition: all 0.2s var(--transition);
+        }
+
+        .floating-label {
+            position: absolute;
+            left: 13px;
+            top: 18px;
+            color: var(--gray-600);
+            font-size: 16px;
+            pointer-events: none;
+            transition: all 0.2s var(--transition);
+            background: linear-gradient(to bottom, 
+                rgba(255,255,255,0) 0%,
+                rgba(255,255,255,0) 49%,
+                rgba(255,255,255,1) 50%,
+                rgba(255,255,255,1) 100%
+            );
+            padding: 0 4px;
+            margin-left: -4px;
+        }
+
+        .input-field:focus,
+        .input-field:not(:placeholder-shown) {
+            border-color: var(--primary-blue);
+            padding-top: 22px;
+            padding-bottom: 6px;
+        }
+
+        .input-field:focus + .floating-label,
+        .input-field:not(:placeholder-shown) + .floating-label {
+            transform: translateY(-28px) scale(0.75);
+            color: var(--primary-blue);
+            left: 13px;
+            background: linear-gradient(to bottom, 
+                rgba(255,255,255,0) 0%,
+                rgba(255,255,255,0) 40%,
+                rgba(255,255,255,1) 41%,
+                rgba(255,255,255,1) 100%
+            );
+        }
+
+        .error-message {
+            color: var(--error-red);
+            font-size: 12px;
+            margin: 8px 0 0 2px;
+            display: none;
+        }
+
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 48px;
+        }
+
+        /* 主按钮增强样式 */
+        .primary-button {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s var(--transition);
+            min-width: 100px;
+            position: relative;
+            overflow: hidden;
+            transform: translateZ(0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .primary-button:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transform: translateY(-1px);
+        }
+
+        .primary-button:active {
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            transform: translateY(1px);
+        }
+
+        .secondary-button {
+            color: var(--primary-blue);
+            background: none;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.3s var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .secondary-button.visible {
+            opacity: 1;
+            transform: none;
+        }
+
+        /* 次按钮悬停效果 */
+        .secondary-button::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(26,115,232,0.1);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .secondary-button:hover::after {
+            opacity: 1;
+        }
+
+        .secondary-button:active {
+            transform: scale(0.98);
+        }
+
+        .g-verification {
+            width: 100%;
+            background: white;
+            border-radius: 8px;
+            padding: 24px 0;
+            margin-top: 24px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .g-verification.active {
+            opacity: 1;
+            transform: none;
+        }
+
+        .g-verification-box {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .g-checkbox {
+            width: 48px;
+            height: 48px;
+            border: 2px solid #dadce0;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .g-checkbox:hover:not(.verified) {
+            border-color: var(--primary-blue);
+            background: #f8fafe;
+        }
+
+        .status-text {
+            color: #5f6368;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .g-loading {
+            width: 24px;
+            height: 24px;
+            border: 3px solid;
+            border-color: #e8f0fe;
+            border-top-color: var(--primary-blue);
+            border-radius: 50%;
+            animation: md-spin 1s linear infinite;
+        }
+
+        .g-success {
+            width: 24px;
+            height: 24px;
+            opacity: 0;
+            animation: md-check-animation 0.3s forwards;
+        }
+
+        @keyframes logoEntry {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: none; }
+        }
+
+        @keyframes textEntry {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: none; }
+        }
+
+        @keyframes md-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes md-check-animation {
+            0% { opacity: 0; transform: scale(0); }
+            50% { opacity: 1; transform: scale(1.1); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes ripple {
+            from { transform: scale(1); opacity: 1; }
+            to { transform: scale(20); opacity: 0; }
+        }
+
+        @media (max-width: 480px) {
+            .auth-flow {
+                padding: 24px;
+            }
+            .input-field {
+                height: 52px;
+                padding: 12px 14px;
+            }
+            .brand-logo {
+                font-size: 22px;
+                margin-bottom: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-flow">
+        <!-- 用户名步骤 -->
+        <div class="step-container active" id="emailStep">
+            <div class="brand-logo">YDGFOP_Login</div>
+            <h1 class="title">登录</h1>
+            <form>
+                <div class="input-container">
+                    <input type="text" class="input-field" placeholder=" " required autocomplete="username">
+                    <label class="floating-label">用户名</label>
+                    <div class="error-message">该用户不存在</div>
+                </div>
+                <div class="action-bar">
+                    <button type="button" class="secondary-button" onclick="handleBack()">返回</button>
+                    <button type="button" class="primary-button" onclick="handleNext()">下一步</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 密码步骤 -->
+        <div class="step-container" id="passwordStep">
+            <div class="brand-logo">YDGFOP_Login</div>
+            <h1 class="title">欢迎</h1>
+            <div class="user-email" id="emailDisplay">user@example.com</div>
+            <form id="passwordForm">
+                <div class="input-container">
+                    <input type="password" class="input-field" placeholder=" " required autocomplete="current-password">
+                    <label class="floating-label">输入你的密码</label>
+                    <div class="error-message">密码错误，请再次尝试</div>
+                </div>
+                <div class="action-bar">
+                    <button type="button" class="secondary-button visible" onclick="handleBack()">返回</button>
+                    <button type="button" class="primary-button" onclick="handleLogin()">登录</button>
+                </div>
+            </form>
+            <!-- 人机验证 -->
+            <div class="g-verification" id="verificationBox">
+                <div class="g-verification-box">
+                    <div class="g-checkbox" onclick="startVerification(this)">
+                        <span class="initial-text"></span>
+                    </div>
+                    <div class="g-text">
+                        <span class="status-text" id="statusText">点击确认进行人机验证</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 用户名验证
+        function handleNext() {
+            const emailInput = document.querySelector('#emailStep input');
+            const username = emailInput.value.trim();
+            if (username !== 'OP') {
+                showError(emailInput);
+                return;
+            }
+            document.getElementById('emailStep').classList.remove('active');
+            document.getElementById('passwordStep').classList.add('active');
+            document.getElementById('emailDisplay').textContent = username;
+        }
+
+        // 返回按钮
+        function handleBack() {
+            document.getElementById('passwordStep').classList.remove('active');
+            document.getElementById('emailStep').classList.add('active');
+        }
+
+        // 密码验证
+        function handleLogin() {
+            const passwordInput = document.querySelector('#passwordStep input');
+            const password = passwordInput.value;
+            if (password !== 'op123456') {
+                showError(passwordInput);
+                return;
+            }
+            document.getElementById('verificationBox').classList.add('active');
+        }
+
+        // 人机验证逻辑
+        function startVerification(container) {
+            if (container.classList.contains('verified')) return;
+
+            const statusText = document.getElementById('statusText');
+            container.innerHTML = '<div class="g-loading"></div>';
+            statusText.textContent = "正在验证中...";
+            container.style.pointerEvents = "none";
+
+            setTimeout(() => {
+                container.classList.add('verified');
+                container.innerHTML = `
+                    <svg class="g-success" viewBox="0 0 24 24">
+                        <path fill="#34a853" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                    </svg>
+                `;
+                statusText.textContent = "人机验证通过";
+                container.style.borderColor = "#34a853";
+                
+                setTimeout(() => {
+                    window.location.href = 'HT.html';
+                }, 1000);
+            }, 2000);
+        }
+
+        // 错误提示
+        function showError(input) {
+            const error = input.parentElement.querySelector('.error-message');
+            error.style.display = 'block';
+            setTimeout(() => error.style.display = 'none', 3000);
+        }
+
+        // 实时输入验证
+        document.querySelectorAll('.input-field').forEach(input => {
+            input.addEventListener('input', () => {
+                const error = input.parentElement.querySelector('.error-message');
+                error.style.display = input.checkValidity() ? 'none' : 'block';
+            });
+        });
+
+        // 按钮涟漪动画
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', function(e) {
+                if(this.classList.contains('primary-button')) {
+                    const rect = this.getBoundingClientRect();
+                    const circle = document.createElement('div');
+                    circle.style.position = 'absolute';
+                    circle.style.width = '10px';
+                    circle.style.height = '10px';
+                    circle.style.background = 'rgba(255,255,255,0.3)';
+                    circle.style.borderRadius = '50%';
+                    circle.style.left = `${e.clientX - rect.left - 5}px`;
+                    circle.style.top = `${e.clientY - rect.top - 5}px`;
+                    circle.style.animation = 'ripple 0.6s linear';
+                    this.appendChild(circle);
+                    setTimeout(() => circle.remove(), 600);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
